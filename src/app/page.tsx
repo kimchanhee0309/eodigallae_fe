@@ -1,69 +1,81 @@
-import Image from "next/image";
+const steps = [
+  {
+    number: "01",
+    title: "가고 싶은 곳 모으기",
+    description: "단톡방에 흩어진 식당, 카페, 숙소 링크를 한곳에 담아요.",
+  },
+  {
+    number: "02",
+    title: "서로의 생각 확인하기",
+    description: "좋은 곳과 어려운 곳, 그 이유까지 편하게 남겨요.",
+  },
+  {
+    number: "03",
+    title: "우리의 다음 장소 정하기",
+    description: "친구들의 의견을 비교하고 함께 갈 곳을 결정해요.",
+  },
+];
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      <header className="flex h-20 items-center border-b border-border">
+        <span className="text-xl font-extrabold tracking-tight text-brand">
+          어디갈래?
+        </span>
+      </header>
+
+      <main className="py-16 sm:py-24">
+        <section aria-labelledby="intro-title">
+          <p className="inline-flex rounded-full bg-brand-soft px-4 py-2 text-sm font-semibold text-brand">
+            함께 고르는 다음 모임
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <h1
+            id="intro-title"
+            className="mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            어디 갈지 고민될 땐,
+            <br />
+            우리 같이 골라요.
+          </h1>
+
+          <p className="mt-6 max-w-xl text-base leading-8 text-muted sm:text-lg">
+            “여기 어때?” 하고 보낸 링크들.
+            <br />
+            한곳에 모으고, 의견을 나누고, 다음 약속을 정해요.
+          </p>
+        </section>
+
+        <section aria-labelledby="steps-title" className="mt-16 sm:mt-24">
+          <h2 id="steps-title" className="text-xl font-bold">
+            복잡한 계획 대신, 세 단계면 충분해요
+          </h2>
+
+          <ol className="mt-6 grid gap-4 md:grid-cols-3">
+            {steps.map((step) => (
+              <li
+                key={step.number}
+                className="rounded-3xl border border-border bg-surface p-7"
+              >
+                <span className="text-sm font-bold text-brand">
+                  {step.number}
+                </span>
+
+                <h3 className="mt-4 text-lg font-bold">{step.title}</h3>
+
+                <p className="mt-3 text-sm leading-7 text-muted">
+                  {step.description}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
       </main>
+
+      <footer className="border-t border-border py-6 text-sm text-muted">
+        어디갈래? · 다음 약속을 함께 정하는 공간
+      </footer>
     </div>
   );
 }
