@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const steps = [
   {
     number: "01",
@@ -45,6 +47,14 @@ export default function HomePage() {
             <br />
             한곳에 모으고, 의견을 나누고, 다음 약속을 정해요.
           </p>
+          <div className="mt-8">
+            <Link
+              href="/rooms/new"
+              className="inline-flex items-center justify-center rounded-2xl bg-brand px-6 py-4 font-bold text-white transition-colors hover:bg-brand-hover"
+            >
+              모임 만들기
+            </Link>
+          </div>
         </section>
 
         <section aria-labelledby="steps-title" className="mt-16 sm:mt-24">
