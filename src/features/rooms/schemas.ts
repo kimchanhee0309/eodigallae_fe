@@ -1,4 +1,5 @@
 import type { CreateRoomErrors, CreateRoomInput } from "./types";
+import { z } from "zod";
 
 export function normalizeCreateRoomInput(
   input: CreateRoomInput,
@@ -29,3 +30,23 @@ export function validateCreateRoomInput(
 
   return errors;
 }
+
+export const createRoomResponseSchema = z.object({
+  data: z.object({
+    room: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      description: z.string(),
+      status: z.enum(["OPEN", "FINALIZED"]),
+      createdAt: z.string().datetime(),
+    }),
+
+    participant: z.object({
+      id: z.string().uuid(),
+      nickname: z.string(),
+      role: z.literal("HOST"),
+    }),
+
+    inviteUrl: z.string().url(),
+  }),
+});
