@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
+import Link from "next/link";
 
 import { ApiError } from "@/lib/api-client";
 
@@ -144,6 +145,14 @@ export default function CreateRoomForm() {
             className={inputClassName}
           />
         </div>
+
+        <Link
+          href={`/rooms/${room.id}`}
+          prefetch={false}
+          className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand px-6 py-3 font-bold text-white hover:bg-brand-hover"
+        >
+          모임으로 이동
+        </Link>
       </section>
     );
   }

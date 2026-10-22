@@ -50,3 +50,22 @@ export const createRoomResponseSchema = z.object({
     inviteUrl: z.string().url(),
   }),
 });
+
+export const roomDetailResponseSchema = z.object({
+  data: z.object({
+    room: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      description: z.string(),
+      status: z.enum(["OPEN", "FINALIZED"]),
+      createdAt: z.string().datetime(),
+      participantCount: z.number().int().nonnegative(),
+    }),
+
+    me: z.object({
+      id: z.string().uuid(),
+      nickname: z.string(),
+      role: z.enum(["HOST", "MEMBER"]),
+    }),
+  }),
+});

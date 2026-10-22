@@ -33,10 +33,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function postJson<T>(
+async function requestJson<T>(
   path: string,
-  body: unknown,
   responseSchema: z.ZodType<T>,
+  options: RequestInit,
 ): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -44,24 +44,27 @@ export async function postJson<T>(
     throw new ApiError("서비스에 연결할 수 없습니다.", 0, "API_NOT_CONFIGURED");
   }
 
+  const headers = new Headers(options.headers);
+
+  headers.set("Accept", "application/json");
+
   let response: Response;
 
   try {
     response = await fetch(`${baseUrl.replace(/\/$/, "")}${path}`, {
-      method: "POST",
+      ...options,
+      headers,
       credentials: "include",
       cache: "no-store",
-
-      headers: {
-        Accept: "application/jsoon",
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(body),
     });
-  } catch {
+  } catch (error) {
+    // React Query가 취소한 요청은 취소 상태로 전달합니다.
+    if (options.signal?.aborted) {
+      throw error;
+    }
+
     throw new ApiError(
-      "연결이 끊겨 생성 결과를 확인하지 못했습니다.",
+      "연결이 끊겨 요청 결과를 확인하지 못했습니다.",
       0,
       "NETWORK_ERROR",
     );
@@ -89,11 +92,36 @@ export async function postJson<T>(
 
   if (!result.success) {
     throw new ApiError(
-      "서버 응답을 확인하지 못했습니다. 생성 여부를 확인해주세요.",
+      "서버 응답을 확인하지 못했습니다.",
       response.status,
       "INVALID_RESPONSE",
     );
   }
 
   return result.data;
+}
+
+export function postJson<T>(
+  path: string,
+  body: unknown,
+  responseSchema: z.ZodType<T>,
+): Promise<T> {
+  return requestJson(path, responseSchema, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+export function getJson<T>(
+  path: string,
+  responseSchema: z.ZodType<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  return requestJson(path, responseSchema, {
+    method: "GET",
+    signal,
+  });
 }
