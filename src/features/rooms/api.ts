@@ -1,6 +1,6 @@
-import { postJson } from "@/lib/api-client";
+import { postJson, getJson } from "@/lib/api-client";
 
-import { createRoomResponseSchema } from "./schemas";
+import { createRoomResponseSchema, roomDetailResponseSchema } from "./schemas";
 import type { CreateRoomInput } from "./types";
 
 export async function createRoom(input: CreateRoomInput) {
@@ -8,6 +8,16 @@ export async function createRoom(input: CreateRoomInput) {
     "/api/rooms",
     input,
     createRoomResponseSchema,
+  );
+
+  return response.data;
+}
+
+export async function getRoomDetail(roomId: string, signal?: AbortSignal) {
+  const response = await getJson(
+    `/api/rooms/${encodeURIComponent(roomId)}`,
+    roomDetailResponseSchema,
+    signal,
   );
 
   return response.data;
