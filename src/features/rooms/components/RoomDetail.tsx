@@ -5,12 +5,46 @@ import Link from "next/link";
 import { ApiError } from "@/lib/api-client";
 import { useRoomDetail } from "../hooks";
 
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import JoinRoomForm from "./JoinRoomForm";
+import InvitePanel from "./InvitePanel";
+
 type RoomDetailProps = {
   roomId: string;
 };
 
 export default function RoomDetail({ roomId }: RoomDetailProps) {
   const query = useRoomDetail(roomId);
+
+  const router = useRouter();
+  const searchParmas = useSearchParams();
+
+  const [hasJoined, setHasJoined] = useState(false);
+
+  const inviteValues = searchParmas.getAll("invite");
+  const hasInvite = searchParmas.has("invite");
+
+  const inviteToken =
+    inviteValues.length === 1 && /^[A-Za-z0-9_-]{43}$/.test(inviteValues[0])
+      ? inviteValues[0]
+      : null;
+
+  useEffect(() => {
+    if (!query.isSuccess || !hasInvite) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParmas.toString());
+
+    nextParams.delete("invite");
+
+    const queryString = nextParams.toString();
+    router.replace(`/room/${roomId}${queryString ? `?${queryString}` : ""}`, {
+      scroll: false,
+    });
+  }, [query.isSuccess, hasInvite, searchParmas, roomId, router]);
 
   if (query.isPending) {
     return (
@@ -28,6 +62,39 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
 
     const status = error instanceof ApiError ? error.status : 0;
 
+    if (status === 401 && inviteToken && !hasJoined) {
+      return (
+        <JoinRoomForm
+          roomId={roomId}
+          inviteToken={inviteToken}
+          onJoined={() => {
+            setHasJoined(true);
+
+            router.replace(`/rooms/${roomId}`, {
+              scroll: false,
+            });
+
+            void query.refetch();
+          }}
+        />
+      );
+    }
+
+    if (status === 401 && hasInvite && !inviteToken) {
+      return (
+        <section
+          role="alert"
+          className="rounded-3xl border border-border bg-surface p-8"
+        >
+          <h1 className="text-2xl font-extrabold">초대 링크를 확인해주세요</h1>
+
+          <p className="mt-4 leading-7 text-muted">
+            링크가 올바르지 않아요. 방장에게 초대 링크를 다시 받아주세요.
+          </p>
+        </section>
+      );
+    }
+
     const accessDenied = status === 401 || status === 403;
     const notFound = status === 404;
 
@@ -38,7 +105,7 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
         : "모임을 불러오지 못했어요";
 
     const description = accessDenied
-      ? "모임을 만든 브라우저에서 접속했는지 확인해주세요. 참여 정보가 만료되었을 수도 있어요."
+      ? "모임에 참여한 브라우저에서 접속했는지 확인해주세요. 참여 정보가 만료되었을 수도 있어요."
       : notFound
         ? "모임이 삭제되었거나 더 이상 이용할 수 없어요."
         : "연결 상태를 확인하고 다시 시도해주세요.";
@@ -140,6 +207,10 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
           </span>
         </p>
       </section>
+
+      {me.role === "HOST" && room.status === "OPEN" && (
+        <InvitePanel roomId={room.id} />
+      )}
     </div>
   );
 }

@@ -5,3 +5,8 @@ export type CreateRoomInput = {
 };
 
 export type CreateRoomErrors = Partial<Record<keyof CreateRoomInput, string>>;
+
+export type JoinRoomInput = {
+  nickname: string;
+  inviteToken: string;
+};
