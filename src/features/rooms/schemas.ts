@@ -69,3 +69,39 @@ export const roomDetailResponseSchema = z.object({
     }),
   }),
 });
+
+export const joinRoomInputSchema = z.strictObject({
+  nickname: z
+    .string()
+    .trim()
+    .min(2, "닉네임을 2자 이상 입력해주세요.")
+    .max(12, "닉네임은 12자 이내로 입력해주세요."),
+
+  inviteToken: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{43}$/, "올바른 초대 링크가 아닙니다."),
+});
+
+export const joinRoomResponseSchema = z.object({
+  data: z.object({
+    room: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      description: z.string(),
+      status: z.enum(["OPEN", "FINALIZED"]),
+      createdAt: z.string().datetime(),
+    }),
+
+    participant: z.object({
+      id: z.string().uuid(),
+      nickname: z.string(),
+      role: z.enum(["HOST", "MEMBER"]),
+    }),
+  }),
+});
+
+export const rotateInviteResponseSchema = z.object({
+  data: z.object({
+    inviteUrl: z.string().url(),
+  }),
+});
