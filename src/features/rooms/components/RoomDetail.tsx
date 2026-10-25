@@ -11,6 +11,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import JoinRoomForm from "./JoinRoomForm";
 import InvitePanel from "./InvitePanel";
 
+import CandidateSection from "@/features/candidates/components/CandidateSection";
+
 type RoomDetailProps = {
   roomId: string;
 };
@@ -41,7 +43,7 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
     nextParams.delete("invite");
 
     const queryString = nextParams.toString();
-    router.replace(`/room/${roomId}${queryString ? `?${queryString}` : ""}`, {
+    router.replace(`/rooms/${roomId}${queryString ? `?${queryString}` : ""}`, {
       scroll: false,
     });
   }, [query.isSuccess, hasInvite, searchParmas, roomId, router]);
@@ -211,6 +213,12 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
       {me.role === "HOST" && room.status === "OPEN" && (
         <InvitePanel roomId={room.id} />
       )}
+
+      <CandidateSection
+        key={room.id}
+        roomId={room.id}
+        roomStatus={room.status}
+      />
     </div>
   );
 }
