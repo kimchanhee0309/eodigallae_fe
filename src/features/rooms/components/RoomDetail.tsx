@@ -12,6 +12,7 @@ import JoinRoomForm from "./JoinRoomForm";
 import InvitePanel from "./InvitePanel";
 
 import CandidateSection from "@/features/candidates/components/CandidateSection";
+import FinalizedPlaceCard from "@/features/finalization/components/FinalizedPlaceCard";
 
 type RoomDetailProps = {
   roomId: string;
@@ -199,6 +200,22 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
         </dl>
       </section>
 
+      {room.status === "FINALIZED" &&
+        (room.finalizedCandidate && room.finalizedAt ? (
+          <FinalizedPlaceCard
+            candidate={room.finalizedCandidate}
+            finalizedAt={room.finalizedAt}
+          />
+        ) : (
+          <p
+            role="alert"
+            className="rounded-3xl border border-border bg-surface p-6 text-muted"
+          >
+            마감된 모임이지만 확정 장소 정보를 확인할 수 없어요. 방장에게
+            문의해주세요
+          </p>
+        ))}
+
       <section className="rounded-3xl border border-border bg-brand-soft p-6">
         <h2 className="font-bold">내 참여 정보</h2>
 
@@ -218,6 +235,7 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
         key={room.id}
         roomId={room.id}
         roomStatus={room.status}
+        isHost={me.role === "HOST"}
       />
     </div>
   );
