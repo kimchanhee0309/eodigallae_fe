@@ -8,15 +8,21 @@ import { useSetVote, useVotes } from "@/features/votes/hooks";
 import { useCandidates } from "../hooks";
 import CreateCandidateForm from "./CreateCandidateForm";
 
+import { useQueryClient } from "@tanstack/react-query";
+import FinalizePlacePanel from "@/features/finalization/components/FinalizePlacePanel";
+
 type CandidateSectionProps = {
   roomId: string;
   roomStatus: "OPEN" | "FINALIZED";
+  isHost: boolean;
 };
 
 export default function CandidateSection({
   roomId,
   roomStatus,
+  isHost,
 }: CandidateSectionProps) {
+  const queryClient = useQueryClient();
   const query = useCandidates(roomId);
   const votes = useVotes(roomId);
   const mutation = useSetVote(roomId);
@@ -55,7 +61,14 @@ export default function CandidateSection({
   function refresh() {
     setMessage("");
 
-    void Promise.all([query.refetch(), votes.refetch()]);
+    void Promise.all([
+      query.refetch(),
+      votes.refetch(),
+      queryClient.invalidateQueries({
+        queryKey: ["rooms", "detail", roomId],
+        exact: true,
+      }),
+    ]);
   }
 
   if (query.isPending) {
@@ -134,8 +147,9 @@ export default function CandidateSection({
       </div>
 
       <p className="mt-3 text-sm leading-6 text-muted">
-        가장 가고 싶은 장소에 한 표를 주세요. 다른 장소로 변경하거나 선택한
-        장소의 투표를 취소할 수 있어요.
+        {isClosed
+          ? "최종 장소가 정해졌어요. 친구들이 추천한 장소와 투표 결과도 확인해보세요."
+          : "가장 가고 싶은 장소에 한 표를 주세요. 다른 장소로 변경하거나 선택한 장소의 투표를 취소할 수 있어요."}
       </p>
 
       {voteData && (
@@ -272,6 +286,9 @@ export default function CandidateSection({
         </ul>
       )}
 
+      {isHost && !isClosed && (
+        <FinalizePlacePanel roomId={roomId} candidates={candidates} />
+      )}
       <div className="mt-8 border-t border-border pt-6">
         {isClosed ? (
           <p className="text-sm text-muted">

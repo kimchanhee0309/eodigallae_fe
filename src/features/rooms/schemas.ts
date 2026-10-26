@@ -1,5 +1,6 @@
 import type { CreateRoomErrors, CreateRoomInput } from "./types";
 import { z } from "zod";
+import { finalizedCandidateSchema } from "@/features/finalization/schemas";
 
 export function normalizeCreateRoomInput(
   input: CreateRoomInput,
@@ -60,6 +61,8 @@ export const roomDetailResponseSchema = z.object({
       status: z.enum(["OPEN", "FINALIZED"]),
       createdAt: z.string().datetime(),
       participantCount: z.number().int().nonnegative(),
+      finalizedAt: z.string().datetime().nullable(),
+      finalizedCandidate: finalizedCandidateSchema.nullable(),
     }),
 
     me: z.object({
@@ -105,3 +108,5 @@ export const rotateInviteResponseSchema = z.object({
     inviteUrl: z.string().url(),
   }),
 });
+
+export type RoomDetailData = z.infer<typeof roomDetailResponseSchema>["data"];
