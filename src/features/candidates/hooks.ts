@@ -7,6 +7,8 @@ import { ApiError } from "@/lib/api-client";
 import { createCandidate, getCandidates } from "./api";
 import type { CreateCandidateInput } from "./schemas";
 
+import { votesKey } from "@/features/votes/keys";
+
 function candidatesKey(roomId: string) {
   return ["rooms", "candidates", roomId] as const;
 }
@@ -33,10 +35,17 @@ export function useCreateCandidate(roomId: string) {
     gcTime: 0,
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: candidatesKey(roomId),
-        exact: true,
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: candidatesKey(roomId),
+          exact: true,
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: votesKey(roomId),
+          exact: true,
+        }),
+      ]);
     },
 
     onError: async (error) => {
