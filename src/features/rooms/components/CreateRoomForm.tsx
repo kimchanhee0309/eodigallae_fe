@@ -4,12 +4,11 @@ import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 
+import { useRetryCooldown } from "@/hooks/use-retry-cooldown";
 import { ApiError } from "@/lib/api-client";
 
 import { useCreateRoom } from "../hooks";
-
 import { normalizeCreateRoomInput, validateCreateRoomInput } from "../schemas";
-
 import type { CreateRoomErrors, CreateRoomInput } from "../types";
 
 const initialValues: CreateRoomInput = {
@@ -40,12 +39,12 @@ const inputClassName =
 
 export default function CreateRoomForm() {
   const [values, setValues] = useState<CreateRoomInput>(initialValues);
-
   const [errors, setErrors] = useState<CreateRoomErrors>({});
 
   const submittingRef = useRef(false);
 
   const mutation = useCreateRoom();
+  const cooldown = useRetryCooldown();
 
   function updateField(field: keyof CreateRoomInput, value: string) {
     setValues((previous) => ({
@@ -58,6 +57,7 @@ export default function CreateRoomForm() {
       [field]: undefined,
     }));
 
+    // 오류 메시지를 지워도 별도로 관리하는 대기 시간은 유지됩니다.
     if (mutation.isError) {
       mutation.reset();
     }
@@ -66,7 +66,7 @@ export default function CreateRoomForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submittingRef.current || mutation.isSuccess) {
+    if (submittingRef.current || mutation.isSuccess || !cooldown.canSubmit()) {
       return;
     }
 
@@ -84,6 +84,8 @@ export default function CreateRoomForm() {
     try {
       await mutation.mutateAsync(input);
     } catch (error) {
+      cooldown.startCooldown(error);
+
       if (error instanceof ApiError) {
         const serverErrors: CreateRoomErrors = {};
 
@@ -249,12 +251,28 @@ export default function CreateRoomForm() {
           </p>
         )}
 
+        {cooldown.isCoolingDown && (
+          <p
+            id="create-retry-wait"
+            className="rounded-2xl bg-orange-50 p-4 text-sm text-orange-800"
+          >
+            {cooldown.remainingSeconds}초 후 다시 시도할 수 있어요.
+          </p>
+        )}
+
         <button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || cooldown.isCoolingDown}
+          aria-describedby={
+            cooldown.isCoolingDown ? "create-retry-wait" : undefined
+          }
           className="w-full rounded-2xl bg-brand px-5 py-4 font-bold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {mutation.isPending ? "모임을 만들고 있어요…" : "모임 만들기"}
+          {mutation.isPending
+            ? "모임을 만들고 있어요…"
+            : cooldown.isCoolingDown
+              ? `${cooldown.remainingSeconds}초 후 다시 시도`
+              : "모임 만들기"}
         </button>
       </fieldset>
     </form>

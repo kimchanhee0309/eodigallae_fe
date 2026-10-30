@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 
+import { useRetryCooldown } from "@/hooks/use-retry-cooldown";
 import { ApiError } from "@/lib/api-client";
 
 import { useJoinRoom } from "../hooks";
@@ -23,12 +24,14 @@ export default function JoinRoomForm({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const submittingRef = useRef(false);
+
   const mutation = useJoinRoom(roomId);
+  const cooldown = useRetryCooldown();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submittingRef.current || mutation.isSuccess) {
+    if (submittingRef.current || mutation.isSuccess || !cooldown.canSubmit()) {
       return;
     }
 
@@ -50,7 +53,8 @@ export default function JoinRoomForm({
     try {
       await mutation.mutateAsync(result.data);
       onJoined();
-    } catch {
+    } catch (error) {
+      cooldown.startCooldown(error);
     } finally {
       submittingRef.current = false;
     }
@@ -100,6 +104,7 @@ export default function JoinRoomForm({
               setNickname(event.target.value);
               setValidationError(null);
 
+              // 오류 메시지를 지워도 대기 시간은 유지됩니다.
               if (mutation.isError) {
                 mutation.reset();
               }
@@ -133,12 +138,28 @@ export default function JoinRoomForm({
             </p>
           )}
 
+          {cooldown.isCoolingDown && (
+            <p
+              id="join-retry-wait"
+              className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm text-orange-800"
+            >
+              {cooldown.remainingSeconds}초 후 다시 시도할 수 있어요.
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || cooldown.isCoolingDown}
+            aria-describedby={
+              cooldown.isCoolingDown ? "join-retry-wait" : undefined
+            }
             className="mt-6 w-full rounded-2xl bg-brand px-5 py-4 font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {mutation.isPending ? "참여하고 있어요..." : "모임 참여하기"}
+            {mutation.isPending
+              ? "참여하고 있어요..."
+              : cooldown.isCoolingDown
+                ? `${cooldown.remainingSeconds}초 후 다시 시도`
+                : "모임 참여하기"}
           </button>
         </fieldset>
       </form>
