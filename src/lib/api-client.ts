@@ -27,10 +27,44 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     public readonly details: ValidationIssue[] = [],
+    public readonly retryAt: number | null = null,
   ) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+function readRetryAt(response: Response): number | null {
+  if (response.status !== 429 && response.status !== 503) {
+    return null;
+  }
+
+  const header = response.headers.get("Retry-After")?.trim();
+
+  if (!header) {
+    return null;
+  }
+
+  const now = Date.now();
+
+  if (/^\d+$/.test(header)) {
+    const seconds = Number(header);
+    const retryAt = now + seconds * 1_000;
+
+    if (!Number.isSafeInteger(seconds) || !Number.isSafeInteger(retryAt)) {
+      return null;
+    }
+
+    return retryAt;
+  }
+
+  const retryAt = Date.parse(header);
+
+  if (!Number.isFinite(retryAt)) {
+    return null;
+  }
+
+  return Math.max(now, retryAt);
 }
 
 async function requestJson<T>(
@@ -70,6 +104,7 @@ async function requestJson<T>(
     );
   }
 
+  const retryAt = readRetryAt(response);
   const payload: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
@@ -78,13 +113,15 @@ async function requestJson<T>(
     if (parsedError.success) {
       const { message, code, details } = parsedError.data.error;
 
-      throw new ApiError(message, response.status, code, details);
+      throw new ApiError(message, response.status, code, details, retryAt);
     }
 
     throw new ApiError(
       "요청을 처리하지 못했습니다.",
       response.status,
       "REQUEST_FAILED",
+      [],
+      retryAt,
     );
   }
 
