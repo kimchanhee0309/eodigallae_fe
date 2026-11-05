@@ -11,6 +11,8 @@ import { useCreateRoom } from "../hooks";
 import { normalizeCreateRoomInput, validateCreateRoomInput } from "../schemas";
 import type { CreateRoomErrors, CreateRoomInput } from "../types";
 
+import InviteLinkActions from "./InviteLinkActions";
+
 const initialValues: CreateRoomInput = {
   name: "",
   hostNickname: "",
@@ -114,46 +116,47 @@ export default function CreateRoomForm() {
         aria-labelledby="created-title"
         className="rounded-3xl border border-border bg-surface p-6 sm:p-8"
       >
-        <p className="text-sm font-bold text-brand">모임 생성 완료</p>
+        <p className="inline-flex rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand">
+          모임 준비 완료!
+        </p>
 
         <h2
           id="created-title"
-          className="mt-3 break-words text-2xl font-extrabold"
+          className="mt-5 break-words text-2xl font-extrabold sm:text-3xl"
         >
           {room.name}
         </h2>
 
-        <p className="mt-3 text-muted">
+        <p className="mt-3 break-words leading-7 text-muted">
           {participant.nickname}님이 방장이에요.
+          <br />
+          이제 친구들을 초대하고 함께 갈 장소를 골라보세요.
         </p>
 
         {room.description && (
-          <p className="mt-4 whitespace-pre-wrap break-words leading-7">
+          <p className="mt-5 whitespace-pre-wrap break-words rounded-2xl bg-background p-4 leading-7">
             {room.description}
           </p>
         )}
 
-        <div className="mt-6">
-          <label htmlFor="invite-url" className="text-sm font-bold">
-            초대 링크
-          </label>
-
-          <input
-            id="invite-url"
-            type="text"
-            readOnly
-            value={inviteUrl}
-            onFocus={(event) => event.currentTarget.select()}
-            className={inputClassName}
+        <div className="mt-7 border-t border-border pt-6">
+          <InviteLinkActions
+            inviteUrl={inviteUrl}
+            title={`${room.name} | 어디갈래?`}
           />
         </div>
+
+        <p className="mt-5 rounded-2xl bg-brand-soft p-4 text-sm leading-7">
+          친구들은 초대 링크에서 닉네임을 입력하면 참여할 수 있어요. 방장인 나는
+          아래 버튼으로 모임에 들어가면 돼요.
+        </p>
 
         <Link
           href={`/rooms/${room.id}`}
           prefetch={false}
-          className="mt-6 inline-flex items-center justify-center rounded-2xl bg-brand px-6 py-3 font-bold text-white hover:bg-brand-hover"
+          className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-brand px-6 py-3 font-bold text-brand hover:bg-brand-soft"
         >
-          모임으로 이동
+          모임으로 이동 →
         </Link>
       </section>
     );
