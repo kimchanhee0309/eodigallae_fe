@@ -1,6 +1,7 @@
 import type { CreateRoomErrors, CreateRoomInput } from "./types";
 import { z } from "zod";
 import { finalizedCandidateSchema } from "@/features/finalization/schemas";
+import { candidateSchema } from "../candidates/schemas";
 
 export function normalizeCreateRoomInput(
   input: CreateRoomInput,
@@ -110,3 +111,4 @@ export const rotateInviteResponseSchema = z.object({
 });
 
 export type RoomDetailData = z.infer<typeof roomDetailResponseSchema>["data"];
+export type Candidate = z.infer<typeof candidateSchema>;

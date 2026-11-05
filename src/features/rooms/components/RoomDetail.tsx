@@ -14,6 +14,8 @@ import InvitePanel from "./InvitePanel";
 import CandidateSection from "@/features/candidates/components/CandidateSection";
 import FinalizedPlaceCard from "@/features/finalization/components/FinalizedPlaceCard";
 
+import RoomOverview from "./RoomOverview";
+
 type RoomDetailProps = {
   roomId: string;
 };
@@ -149,58 +151,21 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
 
   const { room, me } = query.data;
 
-  const createdAt = new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Seoul",
-  }).format(new Date(room.createdAt));
+  const isHost = me.role === "HOST";
+  const isClosed = room.status === "FINALIZED";
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-border bg-surface p-6 sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <span className="rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand">
-            {room.status === "OPEN" ? "의견 모으는 중" : "장소 확정"}
-          </span>
+      <RoomOverview
+        room={room}
+        me={me}
+        refreshing={query.isFetching}
+        onRefresh={() => {
+          void query.refetch();
+        }}
+      />
 
-          <button
-            type="button"
-            disabled={query.isFetching}
-            onClick={() => {
-              void query.refetch();
-            }}
-            className="text-sm font-semibold text-muted hover:text-brand disabled:opacity-60"
-          >
-            {query.isFetching ? "확인 중..." : "새로 확인"}
-          </button>
-        </div>
-
-        <h1 className="mt-6 break-words text-3xl font-extrabold tracking-tight">
-          {room.name}
-        </h1>
-
-        <p className="mt-4 whitespace-pre-wrap break-words leading-8 text-muted">
-          {room.description || "등록된 모임 설명이 없어요."}
-        </p>
-
-        <dl className="mt-8 grid gap-5 border-t border-border pt-6 sm:grid-cols-2">
-          <div>
-            <dt className="text-sm text-muted">함께하는 사람</dt>
-
-            <dd className="mt-2 font-bold">{room.participantCount}명</dd>
-          </div>
-
-          <div>
-            <dt className="text-sm text-muted">모임 생성일 · 한국 시간</dt>
-
-            <dd className="mt-2">
-              <time dateTime={room.createdAt}>{createdAt}</time>
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      {room.status === "FINALIZED" &&
+      {isClosed &&
         (room.finalizedCandidate && room.finalizedAt ? (
           <FinalizedPlaceCard
             candidate={room.finalizedCandidate}
@@ -212,31 +177,24 @@ export default function RoomDetail({ roomId }: RoomDetailProps) {
             className="rounded-3xl border border-border bg-surface p-6 text-muted"
           >
             마감된 모임이지만 확정 장소 정보를 확인할 수 없어요. 방장에게
-            문의해주세요
+            문의해주세요.
           </p>
         ))}
 
-      <section className="rounded-3xl border border-border bg-brand-soft p-6">
-        <h2 className="font-bold">내 참여 정보</h2>
-
-        <p className="mt-3 break-words">
-          {me.nickname}
-          <span className="ml-3 text-sm text-brand">
-            {me.role === "HOST" ? "방장" : "참여자"}
-          </span>
-        </p>
-      </section>
-
-      {me.role === "HOST" && room.status === "OPEN" && (
-        <InvitePanel roomId={room.id} />
+      {isHost && !isClosed && (
+        <div id="room-invite" className="scroll-mt-6">
+          <InvitePanel roomId={room.id} />
+        </div>
       )}
 
-      <CandidateSection
-        key={room.id}
-        roomId={room.id}
-        roomStatus={room.status}
-        isHost={me.role === "HOST"}
-      />
+      <div id="room-candidates" className="scroll-mt-6">
+        <CandidateSection
+          key={room.id}
+          roomId={room.id}
+          roomStatus={room.status}
+          isHost={isHost}
+        />
+      </div>
     </div>
   );
 }
