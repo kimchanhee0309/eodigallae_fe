@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RecentRooms from "@/features/rooms/components/RecentRooms";
 
 const steps = [
   {
@@ -72,6 +73,8 @@ export default function HomePage() {
       </header>
 
       <main>
+        <RecentRooms />
+
         <section
           aria-labelledby="intro-title"
           className="grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16"

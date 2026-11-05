@@ -2,12 +2,18 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createRoom, getRoomDetail, joinRoom, rotateRoomInvite } from "./api";
+import { rememberRecentRoom } from "./recent-rooms";
 
 import type { JoinRoomInput } from "./types";
 
 export function useCreateRoom() {
   return useMutation({
     mutationFn: createRoom,
+
+    onSuccess: (data) => {
+      rememberRecentRoom(data.room);
+    },
+
     retry: false,
     gcTime: 0,
   });
@@ -30,6 +36,10 @@ export function useRoomDetail(roomId: string) {
 export function useJoinRoom(roomId: string) {
   return useMutation({
     mutationFn: (input: JoinRoomInput) => joinRoom(roomId, input),
+
+    onSuccess: (data) => {
+      rememberRecentRoom(data.room);
+    },
 
     retry: false,
     gcTime: 0,
