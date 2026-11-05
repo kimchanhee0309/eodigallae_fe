@@ -11,6 +11,8 @@ import CreateCandidateForm from "./CreateCandidateForm";
 import { useQueryClient } from "@tanstack/react-query";
 import FinalizePlacePanel from "@/features/finalization/components/FinalizePlacePanel";
 
+import CandidateCard from "./CandidateCard";
+
 type CandidateSectionProps = {
   roomId: string;
   roomStatus: "OPEN" | "FINALIZED";
@@ -114,6 +116,10 @@ export default function CandidateSection({
   const voteData = votes.isSuccess ? votes.data : undefined;
   const myCandidateId = voteData?.myCandidateId ?? null;
 
+  const myCandidate = candidates.find(
+    (candidate) => candidate.id === myCandidateId,
+  );
+
   const counts = new Map(
     voteData?.candidates.map((candidate) => [
       candidate.candidateId,
@@ -153,9 +159,29 @@ export default function CandidateSection({
       </p>
 
       {voteData && (
-        <p className="mt-3 text-sm font-semibold text-brand">
-          현재 총 {voteData.totalVotes}표
-        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl bg-background p-4">
+            <p className="text-xs font-semibold text-muted">
+              {isClosed ? "마감된 투표 합계" : "현재 모인 투표"}
+            </p>
+
+            <p className="mt-2 text-xl font-extrabold text-brand">
+              {voteData.totalVotes}표
+            </p>
+          </div>
+
+          <div className="min-w-0 rounded-2xl bg-brand-soft p-4">
+            <p className="text-xs font-semibold text-brand">내 투표</p>
+
+            <p className="mt-2 break-words font-bold">
+              {myCandidateId
+                ? (myCandidate?.name ?? "선택한 후보를 확인하고 있어요.")
+                : isClosed
+                  ? "투표하지 않았어요."
+                  : "아직 선택하지 않았어요."}
+            </p>
+          </div>
+        </div>
       )}
 
       {votes.isPending && (
@@ -200,89 +226,33 @@ export default function CandidateSection({
       </p>
 
       {candidates.length === 0 ? (
-        <p className="mt-6 rounded-2xl bg-background p-6 text-muted">
-          아직 추천된 장소가 없어요. 첫 번째 장소를 추천해볼까요?
-        </p>
+        <div className="mt-6 rounded-2xl border border-dashed border-border bg-background p-6 text-center">
+          <p className="font-bold">아직 등록된 장소 후보가 없어요.</p>
+
+          <p className="mt-2 text-sm leading-7 text-muted">
+            {isClosed
+              ? "이 모임은 장소 후보 등록이 마감됐어요."
+              : "아래에서 장소명과 주소를 입력해 첫 번째 후보를 추천해보세요."}
+          </p>
+        </div>
       ) : (
         <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-          {candidates.map((candidate) => {
-            const selected = myCandidateId === candidate.id;
-            const count = counts.get(candidate.id);
-
-            const buttonLabel = isClosed
-              ? "투표 마감"
-              : selected
-                ? "투표 취소"
-                : myCandidateId
-                  ? "이 장소로 변경"
-                  : "이 장소에 투표";
-
-            return (
-              <li
-                key={candidate.id}
-                className={`min-w-0 rounded-2xl border p-5 ${
-                  selected ? "border-brand bg-brand-soft" : "border-border"
-                }`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="break-words text-lg font-bold">
-                    {candidate.name}
-                  </h3>
-
-                  {selected && (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-brand">
-                      내 선택
-                    </span>
-                  )}
-                </div>
-
-                <p className="mt-2 break-words text-sm leading-6 text-muted">
-                  {candidate.address}
-                </p>
-
-                {candidate.memo && (
-                  <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7">
-                    {candidate.memo}
-                  </p>
-                )}
-
-                <p className="mt-4 break-words text-sm text-muted">
-                  추천한 사람 · {candidate.createdBy.nickname}
-                </p>
-
-                {candidate.mapUrl && (
-                  <a
-                    href={candidate.mapUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-block font-bold text-brand underline underline-offset-4"
-                  >
-                    지도 보기
-                    <span className="sr-only"> · 새 탭에서 열림</span>
-                  </a>
-                )}
-
-                <div className="mt-5 border-t border-border pt-4">
-                  <p className="font-bold text-brand">
-                    {count === undefined ? "집계 확인 필요" : `${count}표`}
-                  </p>
-
-                  <button
-                    type="button"
-                    aria-pressed={selected}
-                    aria-label={`${candidate.name} · ${buttonLabel}`}
-                    disabled={voteDisabled || count === undefined}
-                    onClick={() => {
-                      void handleVote(selected ? null : candidate.id);
-                    }}
-                    className="mt-3 w-full rounded-2xl bg-brand px-4 py-3 font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {buttonLabel}
-                  </button>
-                </div>
-              </li>
-            );
-          })}
+          {candidates.map((candidate) => (
+            <CandidateCard
+              key={candidate.id}
+              candidate={candidate}
+              voteCount={counts.get(candidate.id)}
+              selected={myCandidateId === candidate.id}
+              hasVoted={myCandidateId !== null}
+              isClosed={isClosed}
+              disabled={voteDisabled}
+              onVote={() => {
+                void handleVote(
+                  myCandidateId === candidate.id ? null : candidate.id,
+                );
+              }}
+            />
+          ))}
         </ul>
       )}
 

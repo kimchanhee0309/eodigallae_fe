@@ -79,3 +79,4 @@ export const candidatesResponseSchema = z.object({
 });
 
 export type CreateCandidateInput = z.infer<typeof createCandidateInputSchema>;
+export type Candidate = z.infer<typeof candidateSchema>;
