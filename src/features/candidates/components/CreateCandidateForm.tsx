@@ -8,6 +8,9 @@ import { ApiError } from "@/lib/api-client";
 import { useCreateCandidate } from "../hooks";
 import { createCandidateInputSchema } from "../schemas";
 
+import CandidateMenuFields from "./CandidateMenuFields";
+import type { MenuDraft } from "./CandidateMenuFields";
+
 const emptyForm = {
   name: "",
   address: "",
@@ -51,6 +54,7 @@ export default function CreateCandidateForm({
   const [values, setValues] = useState<FormValues>(emptyForm);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [menus, setMenus] = useState<MenuDraft[]>([]);
 
   const submittingRef = useRef(false);
   const mutation = useCreateCandidate(roomId);
@@ -78,7 +82,25 @@ export default function CreateCandidateForm({
 
     setSuccessMessage("");
 
-    const result = createCandidateInputSchema.safeParse(values);
+    const result = createCandidateInputSchema.safeParse({
+      ...values,
+
+      menus: menus.map((menu) => {
+        const priceText = menu.price.trim();
+
+        return {
+          name: menu.name,
+          priceBasis: menu.priceBasis,
+
+          price:
+            priceText === ""
+              ? null
+              : /^\d+$/.test(priceText)
+                ? Number(priceText)
+                : priceText,
+        };
+      }),
+    });
 
     if (!result.success) {
       setValidationError(
@@ -94,6 +116,7 @@ export default function CreateCandidateForm({
       await mutation.mutateAsync(result.data);
 
       setValues(emptyForm);
+      setMenus([]);
       setSuccessMessage("장소 후보를 등록했어요!");
     } catch {
     } finally {
@@ -159,6 +182,19 @@ export default function CreateCandidateForm({
             className="mt-2 w-full resize-y rounded-2xl border border-border bg-background px-4 py-3"
           />
         </div>
+
+        <CandidateMenuFields
+          menus={menus}
+          onChange={(nextMenus) => {
+            setMenus(nextMenus);
+            setValidationError(null);
+            setSuccessMessage("");
+
+            if (mutation.isError) {
+              mutation.reset();
+            }
+          }}
+        />
 
         {validationError && (
           <p role="alert" className="text-sm text-red-700">
