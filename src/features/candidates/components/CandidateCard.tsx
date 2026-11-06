@@ -2,6 +2,8 @@
 
 import type { Candidate } from "../schemas";
 
+import CandidateMenuList from "./CandidateMenuList";
+
 type CandidateCardProps = {
   candidate: Candidate;
   voteCount: number | undefined;
@@ -54,10 +56,12 @@ export default function CandidateCard({
       </p>
 
       {candidate.memo && (
-        <p className="mt-4 whitespacee-pre-wrap break-words text-sm leading-7">
+        <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-7">
           {candidate.memo}
         </p>
       )}
+
+      <CandidateMenuList menus={candidate.menus} />
 
       <p className="mt-4 break-words text-xs leading-6 text-muted">
         {candidate.createdBy.nickname}님의 추천

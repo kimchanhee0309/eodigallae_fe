@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import FinalizePlacePanel from "@/features/finalization/components/FinalizePlacePanel";
 
 import CandidateCard from "./CandidateCard";
+import CandidateComparison from "./CandidateComparison";
 
 type CandidateSectionProps = {
   roomId: string;
@@ -224,6 +225,8 @@ export default function CandidateSection({
       <p role="status" className="mt-3 text-sm font-semibold text-brand">
         {mutation.isPending ? "투표를 처리하고 있어요..." : message}
       </p>
+
+      <CandidateComparison candidates={candidates} voteCounts={counts} />
 
       {candidates.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border bg-background p-6 text-center">
